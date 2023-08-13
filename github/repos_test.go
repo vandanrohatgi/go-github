@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -3533,4 +3534,40 @@ func TestRepositoryTag_Marshal(t *testing.T) {
 	}`
 
 	testJSONMarshal(t, u, want)
+}
+
+func TestRepositoriesService_GetSbom(t *testing.T) {
+	client, mux, _, teardown := setup()
+	defer teardown()
+
+	mux.HandleFunc("/repos/owner/repo/dependency-graph/sbom", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		fmt.Fprint(w, `{"sbom": {"creationInfo": {"created": "2021-09-01T00:00:00Z"},"name": "owner/repo","packages": [{"name": "rubygems:rails","versionInfo": "1.0.0"}]}}`)
+	})
+
+	ctx := context.Background()
+	sbom, _, err := client.Repositories.GetSbom(ctx, "owner", "repo")
+	if err != nil {
+		t.Errorf("Repositories.GetSbom returned error: %v", err)
+	}
+
+	testTime := time.Date(2021, 9, 1, 0, 0, 0, 0, time.UTC)
+	want := &Sbom{&SbomInfo{CreationInfo: &CreationInfo{Created: &testTime}, Name: String("owner/repo"), Packages: []*RepoDependencies{{Name: String("rubygems:rails"), VersionInfo: String("1.0.0")}}}}
+	if !cmp.Equal(sbom, want) {
+		t.Errorf("Repositories.GetSbom returned %+v, want %+v", sbom, want)
+	}
+
+	const methodName = "GetSbom"
+	testBadOptions(t, methodName, func() (err error) {
+		_, _, err = client.Repositories.GetSbom(ctx, "\n", "\n")
+		return err
+	})
+
+	testNewRequestAndDoFailure(t, methodName, client, func() (*Response, error) {
+		got, resp, err := client.Repositories.GetSbom(ctx, "owner", "repo")
+		if got != nil {
+			t.Errorf("testNewRequestAndDoFailure %v = %#v, want nil", methodName, got)
+		}
+		return resp, err
+	})
 }
