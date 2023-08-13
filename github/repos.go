@@ -2052,25 +2052,21 @@ func isBranchNotProtected(err error) bool {
 	return ok && errorResponse.Message == githubBranchNotProtected
 }
 
-// SBOM stands for software bill of materials, which descibes the
+// Sbom represents software bill of materials, which descibes the
 // packages/libraries that a repository depends on.
-//
-// SPDX is an open standard for software bill of materials (SBOM) that
-// identifies and catalogs components, licenses, copyrights, security
-// references, and other metadata relating to software
 type Sbom struct {
 	Sbom *SbomInfo `json:"sbom,omitempty"`
 }
 
-// When was the SBOM created
-// and who created it
+// When was the SBOM created and who created it
 type CreationInfo struct {
 	Created  *time.Time `json:"created,omitempty"`
 	Creators []*string  `json:"creators,omitempty"`
 }
 
 type RepoDependencies struct {
-	Spdxid           *string `json:"SPDXID,omitempty"`
+	Spdxid *string `json:"SPDXID,omitempty"`
+	// Package name
 	Name             *string `json:"name,omitempty"`
 	VersionInfo      *string `json:"versionInfo,omitempty"`
 	DownloadLocation *string `json:"downloadLocation,omitempty"`
@@ -2079,15 +2075,22 @@ type RepoDependencies struct {
 	LicenseDeclared  *string `json:"licenseDeclared,omitempty"`
 }
 
+// SPDX is an open standard for software bill of materials (SBOM) that
+// identifies and catalogs components, licenses, copyrights, security
+// references, and other metadata relating to software
 type SbomInfo struct {
-	Spdxid            *string             `json:"SPDXID,omitempty"`
-	SpdxVersion       *string             `json:"spdxVersion,omitempty"`
-	CreationInfo      *CreationInfo       `json:"creationInfo,omitempty"`
-	Name              *string             `json:"name,omitempty"`
-	DataLicense       *string             `json:"dataLicense,omitempty"`
-	DocumentDescribes []*string           `json:"documentDescribes,omitempty"`
-	DocumentNamespace *string             `json:"documentNamespace,omitempty"`
-	Packages          []*RepoDependencies `json:"packages,omitempty"`
+	Spdxid       *string       `json:"SPDXID,omitempty"`
+	SpdxVersion  *string       `json:"spdxVersion,omitempty"`
+	CreationInfo *CreationInfo `json:"creationInfo,omitempty"`
+
+	// Repo name
+	Name              *string   `json:"name,omitempty"`
+	DataLicense       *string   `json:"dataLicense,omitempty"`
+	DocumentDescribes []*string `json:"documentDescribes,omitempty"`
+	DocumentNamespace *string   `json:"documentNamespace,omitempty"`
+
+	// List of packages dependencies
+	Packages []*RepoDependencies `json:"packages,omitempty"`
 }
 
 func (s Sbom) String() string {
